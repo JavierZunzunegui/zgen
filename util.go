@@ -9,6 +9,8 @@ func PtrTo[T any](t T) *T {
 // Note if [T] is an interface the check is for 'can cast', if it is a concrete type the check
 // is for type equality.
 // See also the very simialr [Cast].
+//
+// IsType[T](x) <=> {_, ok := x.(T); return ok}
 func IsType[T any](i any) bool {
 	_, ok := i.(T)
 	return ok
@@ -16,7 +18,14 @@ func IsType[T any](i any) bool {
 
 // Cast is similar to [IsType] except it also returns the type it was casted to.
 // Note when returning false, the casted value is the T zero value.
+//
+// Cast[T](x) <=> {t, ok := x.(T); return t, ok}
 func Cast[T any](i any) (T, bool) {
 	t, ok := i.(T)
 	return t, ok
+}
+
+// NoCap returns the slice provided except all excess cap is removed.
+func NoCap[T any](s []T) []T {
+	return s[:len(s):len(s)]
 }

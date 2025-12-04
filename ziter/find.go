@@ -2,8 +2,6 @@ package ziter
 
 import (
 	"iter"
-
-	"github.com/JavierZunzunegui/zgen"
 )
 
 func FindAny[V any](seq iter.Seq[V]) (out V, ok bool) {
@@ -30,6 +28,3 @@ func FindFirst2[K, V any](seq iter.Seq2[K, V], f func(K, V) bool) (K, V, bool) {
 	return FindAny2(Filter2(seq, f))
 }
 
-func Exists[V any](seq iter.Seq[V]) bool {
-	return zgen.BoolLast2(FindAny(seq))
-}

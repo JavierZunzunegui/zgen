@@ -1,3 +1,6 @@
 # visual studio
 .vscode
 zgen.code-workspace
+
+# test coverage files
+*.out

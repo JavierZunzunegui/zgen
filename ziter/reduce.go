@@ -35,6 +35,25 @@ func Reduce2[K, V any](seq iter.Seq2[K, V], f func(K, V, K, V) (K, V)) (outK K, 
 	return outK, outV, ok
 }
 
+// Aggregate accumulates the elements of seq into a single value of a
+// (potentially different) type using f, starting from init.
+func Aggregate[V, A any](seq iter.Seq[V], init A, f func(A, V) A) A {
+	seq(func(v V) bool {
+		init = f(init, v)
+		return true
+	})
+	return init
+}
+
+// Aggregate2 is like [Aggregate] but with [iter.Seq2].
+func Aggregate2[K, V, A any](seq iter.Seq2[K, V], init A, f func(A, K, V) A) A {
+	seq(func(k K, v V) bool {
+		init = f(init, k, v)
+		return true
+	})
+	return init
+}
+
 // Count returns the number of elements in seq.
 func Count[V any](seq iter.Seq[V]) int {
 	var count int

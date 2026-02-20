@@ -141,6 +141,102 @@ func TestReduce2(t *testing.T) {
 	}
 }
 
+func TestAggregate(t *testing.T) {
+	tests := []struct {
+		name string
+		input []int
+		init  string
+		f     func(string, int) string
+		want  string
+	}{
+		{
+			name:  "empty sequence",
+			input: []int{},
+			init:  "start",
+			f:     func(a string, v int) string { return a },
+			want:  "start",
+		},
+		{
+			name:  "single element",
+			input: []int{1},
+			init:  "",
+			f:     func(a string, v int) string { return a + "x" },
+			want:  "x",
+		},
+		{
+			name:  "int to string concat",
+			input: []int{1, 2, 3},
+			init:  "",
+			f: func(a string, v int) string {
+				if a != "" {
+					a += ","
+				}
+				return a + string(rune('0'+v))
+			},
+			want: "1,2,3",
+		},
+		{
+			name:  "sum as different type",
+			input: []int{10, 20, 30},
+			init:  "total:",
+			f: func(a string, v int) string {
+				n := 0
+				for _, c := range a[len("total:"):] {
+					n = n*10 + int(c-'0')
+				}
+				n += v
+				s := ""
+				for n > 0 {
+					s = string(rune('0'+n%10)) + s
+					n /= 10
+				}
+				if s == "" {
+					s = "0"
+				}
+				return "total:" + s
+			},
+			want: "total:60",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ziter.Aggregate(slices.Values(tt.input), tt.init, tt.f)
+			if got != tt.want {
+				t.Errorf("Aggregate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAggregate2(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		seq := makeSeq2([]string{}, []int{})
+		got := ziter.Aggregate2(seq, 0, func(a int, k string, v int) int { return a + v })
+		if got != 0 {
+			t.Errorf("Aggregate2() = %v, want 0", got)
+		}
+	})
+
+	t.Run("sum values", func(t *testing.T) {
+		seq := makeSeq2([]string{"a", "b", "c"}, []int{10, 20, 30})
+		got := ziter.Aggregate2(seq, 0, func(a int, k string, v int) int { return a + v })
+		if got != 60 {
+			t.Errorf("Aggregate2() = %v, want 60", got)
+		}
+	})
+
+	t.Run("concat keys", func(t *testing.T) {
+		seq := makeSeq2([]string{"a", "b", "c"}, []int{1, 2, 3})
+		got := ziter.Aggregate2(seq, "", func(a string, k string, v int) string {
+			return a + k
+		})
+		if got != "abc" {
+			t.Errorf("Aggregate2() = %v, want abc", got)
+		}
+	})
+}
+
 // TestCount tests the Count function
 func TestCount(t *testing.T) {
 	tests := []struct {

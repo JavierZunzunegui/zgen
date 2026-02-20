@@ -279,6 +279,239 @@ func TestDrop2(t *testing.T) {
 	}
 }
 
+func TestTakeWhile(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []int
+		f        func(int) bool
+		expected []int
+	}{
+		{
+			name:     "empty sequence",
+			input:    []int{},
+			f:        func(v int) bool { return v < 5 },
+			expected: []int{},
+		},
+		{
+			name:     "take all",
+			input:    []int{1, 2, 3},
+			f:        func(v int) bool { return v < 10 },
+			expected: []int{1, 2, 3},
+		},
+		{
+			name:     "take none",
+			input:    []int{5, 6, 7},
+			f:        func(v int) bool { return v < 5 },
+			expected: []int{},
+		},
+		{
+			name:     "take prefix",
+			input:    []int{1, 2, 3, 6, 7, 1},
+			f:        func(v int) bool { return v < 5 },
+			expected: []int{1, 2, 3},
+		},
+		{
+			name:     "stop at first false",
+			input:    []int{2, 4, 6, 3, 8},
+			f:        func(v int) bool { return v%2 == 0 },
+			expected: []int{2, 4, 6},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := slices.Collect(ziter.TakeWhile(slices.Values(tt.input), tt.f))
+			if result == nil {
+				result = []int{}
+			}
+			if !slices.Equal(result, tt.expected) {
+				t.Errorf("TakeWhile(%v) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestTakeWhileEarlyTermination(t *testing.T) {
+	callCount := 0
+	input := func(yield func(int) bool) {
+		for i := 1; i <= 100; i++ {
+			callCount++
+			if !yield(i) {
+				return
+			}
+		}
+	}
+
+	result := slices.Collect(ziter.TakeWhile(input, func(v int) bool { return v <= 3 }))
+	expected := []int{1, 2, 3}
+
+	if !slices.Equal(result, expected) {
+		t.Errorf("TakeWhile() = %v, want %v", result, expected)
+	}
+	// 4 calls: 3 passing + 1 that returns false
+	if callCount != 4 {
+		t.Errorf("TakeWhile should stop at first false, consumed %d elements", callCount)
+	}
+}
+
+func TestTakeWhile2(t *testing.T) {
+	tests := []struct {
+		name       string
+		keys       []string
+		values     []int
+		f          func(string, int) bool
+		wantKeys   []string
+		wantValues []int
+	}{
+		{
+			name:       "empty sequence",
+			keys:       []string{},
+			values:     []int{},
+			f:          func(k string, v int) bool { return v < 5 },
+			wantKeys:   []string{},
+			wantValues: []int{},
+		},
+		{
+			name:       "take all",
+			keys:       []string{"a", "b", "c"},
+			values:     []int{1, 2, 3},
+			f:          func(k string, v int) bool { return v < 10 },
+			wantKeys:   []string{"a", "b", "c"},
+			wantValues: []int{1, 2, 3},
+		},
+		{
+			name:       "take prefix",
+			keys:       []string{"a", "b", "c", "d"},
+			values:     []int{1, 2, 10, 3},
+			f:          func(k string, v int) bool { return v < 5 },
+			wantKeys:   []string{"a", "b"},
+			wantValues: []int{1, 2},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			seq := makeSeq2(tt.keys, tt.values)
+			gotKeys, gotValues := collectSeq2(ziter.TakeWhile2(seq, tt.f))
+			if gotKeys == nil {
+				gotKeys = []string{}
+			}
+			if gotValues == nil {
+				gotValues = []int{}
+			}
+			if !slices.Equal(gotKeys, tt.wantKeys) || !slices.Equal(gotValues, tt.wantValues) {
+				t.Errorf("TakeWhile2() = (%v, %v), want (%v, %v)",
+					gotKeys, gotValues, tt.wantKeys, tt.wantValues)
+			}
+		})
+	}
+}
+
+func TestDropWhile(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []int
+		f        func(int) bool
+		expected []int
+	}{
+		{
+			name:     "empty sequence",
+			input:    []int{},
+			f:        func(v int) bool { return v < 5 },
+			expected: []int{},
+		},
+		{
+			name:     "drop all",
+			input:    []int{1, 2, 3},
+			f:        func(v int) bool { return v < 10 },
+			expected: []int{},
+		},
+		{
+			name:     "drop none",
+			input:    []int{5, 6, 7},
+			f:        func(v int) bool { return v < 5 },
+			expected: []int{5, 6, 7},
+		},
+		{
+			name:     "drop prefix",
+			input:    []int{1, 2, 3, 6, 7, 1},
+			f:        func(v int) bool { return v < 5 },
+			expected: []int{6, 7, 1},
+		},
+		{
+			name:     "does not re-drop after first false",
+			input:    []int{2, 4, 3, 2, 6},
+			f:        func(v int) bool { return v%2 == 0 },
+			expected: []int{3, 2, 6},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := slices.Collect(ziter.DropWhile(slices.Values(tt.input), tt.f))
+			if result == nil {
+				result = []int{}
+			}
+			if !slices.Equal(result, tt.expected) {
+				t.Errorf("DropWhile(%v) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDropWhile2(t *testing.T) {
+	tests := []struct {
+		name       string
+		keys       []string
+		values     []int
+		f          func(string, int) bool
+		wantKeys   []string
+		wantValues []int
+	}{
+		{
+			name:       "empty sequence",
+			keys:       []string{},
+			values:     []int{},
+			f:          func(k string, v int) bool { return v < 5 },
+			wantKeys:   []string{},
+			wantValues: []int{},
+		},
+		{
+			name:       "drop all",
+			keys:       []string{"a", "b", "c"},
+			values:     []int{1, 2, 3},
+			f:          func(k string, v int) bool { return v < 10 },
+			wantKeys:   []string{},
+			wantValues: []int{},
+		},
+		{
+			name:       "drop prefix",
+			keys:       []string{"a", "b", "c", "d"},
+			values:     []int{1, 2, 10, 3},
+			f:          func(k string, v int) bool { return v < 5 },
+			wantKeys:   []string{"c", "d"},
+			wantValues: []int{10, 3},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			seq := makeSeq2(tt.keys, tt.values)
+			gotKeys, gotValues := collectSeq2(ziter.DropWhile2(seq, tt.f))
+			if gotKeys == nil {
+				gotKeys = []string{}
+			}
+			if gotValues == nil {
+				gotValues = []int{}
+			}
+			if !slices.Equal(gotKeys, tt.wantKeys) || !slices.Equal(gotValues, tt.wantValues) {
+				t.Errorf("DropWhile2() = (%v, %v), want (%v, %v)",
+					gotKeys, gotValues, tt.wantKeys, tt.wantValues)
+			}
+		})
+	}
+}
+
 // helpers for Seq2 tests
 
 func makeSeq2[K, V any](keys []K, values []V) func(func(K, V) bool) {

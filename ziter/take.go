@@ -63,3 +63,60 @@ func Drop2[K, V any](seq iter.Seq2[K, V], n int) iter.Seq2[K, V] {
 		})
 	}
 }
+
+// TakeWhile returns elements from the start of seq while f returns true.
+// It stops consuming the source iterator as soon as f returns false.
+func TakeWhile[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		seq(func(v V) bool {
+			if !f(v) {
+				return false
+			}
+			return yield(v)
+		})
+	}
+}
+
+// TakeWhile2 is like [TakeWhile] but with [iter.Seq2].
+func TakeWhile2[K, V any](seq iter.Seq2[K, V], f func(K, V) bool) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		seq(func(k K, v V) bool {
+			if !f(k, v) {
+				return false
+			}
+			return yield(k, v)
+		})
+	}
+}
+
+// DropWhile skips elements from the start of seq while f returns true, then yields the rest.
+func DropWhile[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		dropping := true
+		seq(func(v V) bool {
+			if dropping {
+				if f(v) {
+					return true
+				}
+				dropping = false
+			}
+			return yield(v)
+		})
+	}
+}
+
+// DropWhile2 is like [DropWhile] but with [iter.Seq2].
+func DropWhile2[K, V any](seq iter.Seq2[K, V], f func(K, V) bool) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		dropping := true
+		seq(func(k K, v V) bool {
+			if dropping {
+				if f(k, v) {
+					return true
+				}
+				dropping = false
+			}
+			return yield(k, v)
+		})
+	}
+}

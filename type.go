@@ -1,6 +1,6 @@
 package zgen
 
-// PtrTo is a lazy way to do `var x T; &x`, but do so in a sigle statement.
+// PtrTo is a lazy way to do `var x T; &x`, but do so in a single statement.
 func PtrTo[T any](t T) *T {
 	return &t
 }
@@ -8,7 +8,7 @@ func PtrTo[T any](t T) *T {
 // IsType is a lazy way to check if the value in an interface can be cast to another type.
 // Note if [T] is an interface the check is for 'can cast', if it is a concrete type the check
 // is for type equality.
-// See also the very simialr [Cast].
+// See also the very similar [Cast].
 //
 // IsType[T](x) <=> {_, ok := x.(T); return ok}
 func IsType[T any](i any) bool {

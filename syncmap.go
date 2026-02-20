@@ -10,6 +10,7 @@ type SyncMap[K comparable, V any] struct {
 	m *sync.Map
 }
 
+// NewSyncMap returns a ready-to-use SyncMap.
 func NewSyncMap[K comparable, V any]() SyncMap[K, V] {
 	return SyncMap[K, V]{m: &sync.Map{}}
 }
@@ -34,7 +35,8 @@ func (sm SyncMap[K, V]) Delete(key K) {
 	sm.m.Delete(key)
 }
 
-// LoadOrStore returns the existing value if present, otherwise stores and returns the new one
+// LoadOrStore returns the existing value for key if present (loaded=true),
+// otherwise stores value and returns it (loaded=false).
 func (sm SyncMap[K, V]) LoadOrStore(key K, value V) (V, bool) {
 	actual, loaded := sm.m.LoadOrStore(key, value)
 	return actual.(V), loaded

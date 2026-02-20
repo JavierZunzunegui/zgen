@@ -5,6 +5,56 @@ import (
 	"iter"
 )
 
+// Reduce accumulates the elements of seq into a single value using f.
+// The first element is used as the initial accumulator.
+// If seq is empty, it returns the zero value and false.
+func Reduce[V any](seq iter.Seq[V], f func(V, V) V) (out V, ok bool) {
+	seq(func(v V) bool {
+		if !ok {
+			out, ok = v, true
+		} else {
+			out = f(out, v)
+		}
+		return true
+	})
+	return out, ok
+}
+
+// Reduce2 is like [Reduce] but with [iter.Seq2].
+// The first key-value pair is used as the initial accumulator.
+// If seq is empty, it returns zero values and false.
+func Reduce2[K, V any](seq iter.Seq2[K, V], f func(K, V, K, V) (K, V)) (outK K, outV V, ok bool) {
+	seq(func(k K, v V) bool {
+		if !ok {
+			outK, outV, ok = k, v, true
+		} else {
+			outK, outV = f(outK, outV, k, v)
+		}
+		return true
+	})
+	return outK, outV, ok
+}
+
+// Count returns the number of elements in seq.
+func Count[V any](seq iter.Seq[V]) int {
+	var count int
+	seq(func(V) bool {
+		count++
+		return true
+	})
+	return count
+}
+
+// Count2 returns the number of key-value pairs in seq.
+func Count2[K, V any](seq iter.Seq2[K, V]) int {
+	var count int
+	seq(func(K, V) bool {
+		count++
+		return true
+	})
+	return count
+}
+
 // MaxFunc returns the maximum element of seq and true, using cmp to compare values.
 // If seq is empty, it returns the zero value and false.
 // cmp(a, b) must return a negative int if a < b, zero if a == b, a positive int if a > b.

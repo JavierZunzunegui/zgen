@@ -36,3 +36,8 @@ func FindFirst2[K, V any](seq iter.Seq2[K, V], f func(K, V) bool) (K, V, bool) {
 	return FindAny2(Filter2(seq, f))
 }
 
+// Exists reports whether seq contains at least one element.
+func Exists[V any](seq iter.Seq[V]) bool {
+	_, ok := FindAny(seq)
+	return ok
+}

@@ -40,6 +40,20 @@ func ValueBy[V, V2 any](seq iter.Seq[V], f func(V) V2) iter.Seq2[V, V2] {
 	}
 }
 
+// Single returns a sequence that yields exactly one element.
+func Single[V any](v V) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		yield(v)
+	}
+}
+
+// Single2 returns a sequence that yields exactly one key-value pair.
+func Single2[K, V any](k K, v V) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		yield(k, v)
+	}
+}
+
 // Keys converts a [iter.Seq2] to a [iter.Seq1] maintaining the prior keys as entries.
 func Keys[K, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {

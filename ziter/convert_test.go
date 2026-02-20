@@ -386,6 +386,62 @@ func TestValueByTypes(t *testing.T) {
 	})
 }
 
+func TestSingle(t *testing.T) {
+	t.Run("int", func(t *testing.T) {
+		got := slices.Collect(ziter.Single(42))
+		if !slices.Equal(got, []int{42}) {
+			t.Errorf("Single(42) = %v, want [42]", got)
+		}
+	})
+
+	t.Run("string", func(t *testing.T) {
+		got := slices.Collect(ziter.Single("hello"))
+		if !slices.Equal(got, []string{"hello"}) {
+			t.Errorf("Single(\"hello\") = %v, want [hello]", got)
+		}
+	})
+
+	t.Run("early termination", func(t *testing.T) {
+		count := 0
+		for range ziter.Single(1) {
+			count++
+			break
+		}
+		if count != 1 {
+			t.Errorf("count = %d, want 1", count)
+		}
+	})
+}
+
+func TestSingle2(t *testing.T) {
+	t.Run("int string", func(t *testing.T) {
+		got := maps.Collect(ziter.Single2(1, "one"))
+		expected := map[int]string{1: "one"}
+		if !maps.Equal(got, expected) {
+			t.Errorf("Single2(1, \"one\") = %v, want %v", got, expected)
+		}
+	})
+
+	t.Run("string int", func(t *testing.T) {
+		got := maps.Collect(ziter.Single2("key", 99))
+		expected := map[string]int{"key": 99}
+		if !maps.Equal(got, expected) {
+			t.Errorf("Single2(\"key\", 99) = %v, want %v", got, expected)
+		}
+	})
+
+	t.Run("early termination", func(t *testing.T) {
+		count := 0
+		for range ziter.Single2("a", 1) {
+			count++
+			break
+		}
+		if count != 1 {
+			t.Errorf("count = %d, want 1", count)
+		}
+	})
+}
+
 // TestKeysEarlyTermination verifies Keys respects early termination
 func TestKeysEarlyTermination(t *testing.T) {
 	callCount := 0

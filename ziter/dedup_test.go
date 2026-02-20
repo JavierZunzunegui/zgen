@@ -4,12 +4,9 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/JavierZunzunegui/zgen"
 	"github.com/JavierZunzunegui/zgen/ziter"
 )
-
-type kv struct {
-	k, v int
-}
 
 func TestDedup(t *testing.T) {
 	tests := []struct {
@@ -60,20 +57,20 @@ func TestDedup(t *testing.T) {
 }
 
 func TestDedup2(t *testing.T) {
-	// helper: build a Seq2[int,int] from a slice of kv pairs
-	fromPairs := func(pairs []kv) func(func(int, int) bool) {
+	// helper: build a Seq2[int,int] from a slice of Pair[int,int]
+	fromPairs := func(pairs []zgen.Pair[int, int]) func(func(int, int) bool) {
 		return func(yield func(int, int) bool) {
 			for _, p := range pairs {
-				if !yield(p.k, p.v) {
+				if !yield(p.Both()) {
 					return
 				}
 			}
 		}
 	}
-	collectPairs := func(seq func(func(int, int) bool)) []kv {
-		var out []kv
+	collectPairs := func(seq func(func(int, int) bool)) []zgen.Pair[int, int] {
+		var out []zgen.Pair[int, int]
 		seq(func(k, v int) bool {
-			out = append(out, kv{k, v})
+			out = append(out, zgen.NewPair(k, v))
 			return true
 		})
 		return out
@@ -81,43 +78,43 @@ func TestDedup2(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		input    []kv
-		expected []kv
+		input    []zgen.Pair[int, int]
+		expected []zgen.Pair[int, int]
 	}{
 		{
 			name:     "empty",
-			input:    []kv{},
+			input:    []zgen.Pair[int, int]{},
 			expected: nil,
 		},
 		{
 			name:     "no duplicates",
-			input:    []kv{{1, 1}, {1, 2}, {2, 1}},
-			expected: []kv{{1, 1}, {1, 2}, {2, 1}},
+			input:    []zgen.Pair[int, int]{zgen.NewPair(1, 1), zgen.NewPair(1, 2), zgen.NewPair(2, 1)},
+			expected: []zgen.Pair[int, int]{zgen.NewPair(1, 1), zgen.NewPair(1, 2), zgen.NewPair(2, 1)},
 		},
 		{
 			name:     "duplicate pair",
-			input:    []kv{{1, 2}, {1, 2}, {3, 4}},
-			expected: []kv{{1, 2}, {3, 4}},
+			input:    []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(1, 2), zgen.NewPair(3, 4)},
+			expected: []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(3, 4)},
 		},
 		{
 			name:     "same key different value not duplicate",
-			input:    []kv{{1, 2}, {1, 3}},
-			expected: []kv{{1, 2}, {1, 3}},
+			input:    []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(1, 3)},
+			expected: []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(1, 3)},
 		},
 		{
 			name:     "same value different key not duplicate",
-			input:    []kv{{1, 2}, {3, 2}},
-			expected: []kv{{1, 2}, {3, 2}},
+			input:    []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(3, 2)},
+			expected: []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(3, 2)},
 		},
 		{
 			name:     "non-consecutive duplicate pair",
-			input:    []kv{{1, 2}, {3, 4}, {1, 2}},
-			expected: []kv{{1, 2}, {3, 4}},
+			input:    []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(3, 4), zgen.NewPair(1, 2)},
+			expected: []zgen.Pair[int, int]{zgen.NewPair(1, 2), zgen.NewPair(3, 4)},
 		},
 		{
 			name:     "all same",
-			input:    []kv{{5, 6}, {5, 6}, {5, 6}},
-			expected: []kv{{5, 6}},
+			input:    []zgen.Pair[int, int]{zgen.NewPair(5, 6), zgen.NewPair(5, 6), zgen.NewPair(5, 6)},
+			expected: []zgen.Pair[int, int]{zgen.NewPair(5, 6)},
 		},
 	}
 

@@ -5,6 +5,8 @@ package ziter
 import (
 	"iter"
 	"slices"
+
+	"github.com/JavierZunzunegui/zgen"
 )
 
 // Split partitions seq into two sequences: the first yields elements that
@@ -20,18 +22,12 @@ func Split[V any](seq iter.Seq[V], f func(V) bool) (iter.Seq[V], iter.Seq[V]) {
 // satisfy f, the second yields pairs that do not. The input sequence is
 // collected eagerly so both outputs can be iterated independently.
 func Split2[K, V any](seq iter.Seq2[K, V], f func(K, V) bool) (iter.Seq2[K, V], iter.Seq2[K, V]) {
-	type pair = struct {
-		k K
-		v V
-	}
-
 	left, right := Split(
-		ToSeq1(seq, func(k K, v V) pair { return pair{k, v} }),
-		func(p pair) bool { return f(p.k, p.v) },
+		ToSeq1(seq, zgen.NewPair),
+		func(p zgen.Pair[K, V]) bool { return f(p.Both()) },
 	)
 
-	toKV := func(p pair) (K, V) { return p.k, p.v }
-	return ToSeq2(left, toKV), ToSeq2(right, toKV)
+	return ToSeq2(left, zgen.Pair[K, V].Both), ToSeq2(right, zgen.Pair[K, V].Both)
 }
 
 // SplitKey partitions seq by applying f to each key, equivalent to Split2

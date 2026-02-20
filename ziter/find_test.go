@@ -293,6 +293,42 @@ func TestFindAny2EarlyTermination(t *testing.T) {
 	}
 }
 
+// TestFindFirst2EarlyTermination verifies FindFirst2 stops after finding first match
+func TestFindFirst2EarlyTermination(t *testing.T) {
+	callCount := 0
+	input := func(yield func(string, int) bool) {
+		pairs := []struct {
+			k string
+			v int
+		}{
+			{"a", 1}, {"b", 2}, {"c", 3}, {"d", 4}, {"e", 5},
+		}
+		for _, p := range pairs {
+			if !yield(p.k, p.v) {
+				return
+			}
+		}
+	}
+
+	k, v, ok := ziter.FindFirst2(input, func(key string, val int) bool {
+		callCount++
+		return val > 2
+	})
+
+	if !ok {
+		t.Fatal("FindFirst2() should find an element")
+	}
+
+	if k != "c" || v != 3 {
+		t.Errorf("FindFirst2() = (%v, %v), want (c, 3)", k, v)
+	}
+
+	// Should have checked (a,1), (b,2), (c,3) and stopped
+	if callCount > 4 {
+		t.Errorf("FindFirst2 should stop after finding match, called predicate %d times", callCount)
+	}
+}
+
 // TestFindFirst2 tests the FindFirst2 function
 func TestFindFirst2(t *testing.T) {
 	tests := []struct {

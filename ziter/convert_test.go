@@ -10,6 +10,72 @@ import (
 	"github.com/JavierZunzunegui/zgen/ziter"
 )
 
+// TestToSeq2 tests the ToSeq2 function
+func TestToSeq2(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		seq := slices.Values([]string{})
+		seq2 := ziter.ToSeq2(seq, func(s string) (int, string) { return len(s), s })
+		result := maps.Collect(seq2)
+		if len(result) != 0 {
+			t.Errorf("ToSeq2() = %v, want empty", result)
+		}
+	})
+
+	t.Run("string to (length, value)", func(t *testing.T) {
+		seq := slices.Values([]string{"a", "bb", "ccc"})
+		seq2 := ziter.ToSeq2(seq, func(s string) (int, string) { return len(s), s })
+		result := maps.Collect(seq2)
+		expected := map[int]string{1: "a", 2: "bb", 3: "ccc"}
+		if !maps.Equal(result, expected) {
+			t.Errorf("ToSeq2() = %v, want %v", result, expected)
+		}
+	})
+}
+
+// TestToSeq1 tests the ToSeq1 function
+func TestToSeq1(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		seq2 := maps.All(map[string]int{})
+		seq := ziter.ToSeq1(seq2, func(k string, v int) string { return fmt.Sprintf("%s:%d", k, v) })
+		result := slices.Collect(seq)
+		if len(result) != 0 {
+			t.Errorf("ToSeq1() = %v, want empty", result)
+		}
+	})
+
+	t.Run("single entry", func(t *testing.T) {
+		// Use a deterministic Seq2 (not a map) to avoid ordering issues.
+		seq2 := func(yield func(string, int) bool) {
+			yield("x", 7)
+		}
+		seq := ziter.ToSeq1(seq2, func(k string, v int) string { return fmt.Sprintf("%s:%d", k, v) })
+		result := slices.Collect(seq)
+		expected := []string{"x:7"}
+		if !slices.Equal(result, expected) {
+			t.Errorf("ToSeq1() = %v, want %v", result, expected)
+		}
+	})
+
+	t.Run("multiple entries preserve order", func(t *testing.T) {
+		seq2 := func(yield func(string, int) bool) {
+			for _, p := range []struct {
+				k string
+				v int
+			}{{"a", 1}, {"b", 2}, {"c", 3}} {
+				if !yield(p.k, p.v) {
+					return
+				}
+			}
+		}
+		seq := ziter.ToSeq1(seq2, func(k string, v int) string { return fmt.Sprintf("%s:%d", k, v) })
+		result := slices.Collect(seq)
+		expected := []string{"a:1", "b:2", "c:3"}
+		if !slices.Equal(result, expected) {
+			t.Errorf("ToSeq1() = %v, want %v", result, expected)
+		}
+	})
+}
+
 // TestKeys tests the Keys function
 func TestKeys(t *testing.T) {
 	tests := []struct {

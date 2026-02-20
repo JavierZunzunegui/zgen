@@ -54,6 +54,21 @@ func Single2[K, V any](k K, v V) iter.Seq2[K, V] {
 	}
 }
 
+// Enumerate converts a [iter.Seq] to a [iter.Seq2] where the key is the
+// zero-based index of each element.
+func Enumerate[V any](seq iter.Seq[V]) iter.Seq2[int, V] {
+	return func(yield func(int, V) bool) {
+		i := 0
+		seq(func(v V) bool {
+			if !yield(i, v) {
+				return false
+			}
+			i++
+			return true
+		})
+	}
+}
+
 // Keys converts a [iter.Seq2] to a [iter.Seq1] maintaining the prior keys as entries.
 func Keys[K, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {

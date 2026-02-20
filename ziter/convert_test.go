@@ -442,6 +442,54 @@ func TestSingle2(t *testing.T) {
 	})
 }
 
+func TestEnumerate(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		seq := slices.Values([]string{})
+		result := slices.Collect(ziter.Keys(ziter.Enumerate(seq)))
+		if len(result) != 0 {
+			t.Errorf("Enumerate() = %v, want empty", result)
+		}
+	})
+
+	t.Run("strings", func(t *testing.T) {
+		seq := slices.Values([]string{"a", "b", "c"})
+		var keys []int
+		var vals []string
+		for i, v := range ziter.Enumerate(seq) {
+			keys = append(keys, i)
+			vals = append(vals, v)
+		}
+		if !slices.Equal(keys, []int{0, 1, 2}) {
+			t.Errorf("keys = %v, want [0 1 2]", keys)
+		}
+		if !slices.Equal(vals, []string{"a", "b", "c"}) {
+			t.Errorf("vals = %v, want [a b c]", vals)
+		}
+	})
+
+	t.Run("early termination", func(t *testing.T) {
+		callCount := 0
+		seq := func(yield func(int) bool) {
+			for i := range 10 {
+				callCount++
+				if !yield(i) {
+					return
+				}
+			}
+		}
+		count := 0
+		for range ziter.Enumerate(seq) {
+			count++
+			if count == 3 {
+				break
+			}
+		}
+		if callCount > 4 {
+			t.Errorf("Enumerate didn't respect early termination: callCount=%d, expected <= 4", callCount)
+		}
+	})
+}
+
 // TestKeysEarlyTermination verifies Keys respects early termination
 func TestKeysEarlyTermination(t *testing.T) {
 	callCount := 0

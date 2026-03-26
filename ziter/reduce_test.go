@@ -143,7 +143,7 @@ func TestReduce2(t *testing.T) {
 
 func TestAggregate(t *testing.T) {
 	tests := []struct {
-		name string
+		name  string
 		input []int
 		init  string
 		f     func(string, int) string

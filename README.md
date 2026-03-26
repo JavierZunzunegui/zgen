@@ -2,6 +2,7 @@
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/JavierZunzunegui/zgen)](./go.mod)
 [![GoDoc](https://godoc.org/github.com/JavierZunzunegui/zgen?status.svg)](https://pkg.go.dev/github.com/JavierZunzunegui/zgen)
+![Build Status](https://github.com/JavierZunzunegui/zgen/actions/workflows/go.yml/badge.svg)
 [![Go report](https://goreportcard.com/badge/github.com/JavierZunzunegui/zgen)](https://goreportcard.com/report/github.com/JavierZunzunegui/zgen)
 [![License](https://img.shields.io/github/license/JavierZunzunegui/zerrors)](./LICENSE)
 

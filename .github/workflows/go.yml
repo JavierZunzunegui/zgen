@@ -1,0 +1,25 @@
+
+name: Go
+on: [push, pull_request]
+jobs:
+
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+        check-latest: true
+        cache: true
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+
+    - name: Build
+      run: go build -v ./...
+    
+    - name: Test
+      run: go test ./...
